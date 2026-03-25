@@ -30,3 +30,5 @@ define DEFAULT_SERIAL4_PROTOCOL SerialProtocol_RCIN
 define DEFAULT_SERIAL6_PROTOCOL SerialProtocol_GPS
 define DEFAULT_SERIAL7_PROTOCOL SerialProtocol_ESCTelemetry
 define DEFAULT_SERIAL8_PROTOCOL SerialProtocol_MAVLink2
+
+define HAL_BATT_VOLT_SCALE 21.0
