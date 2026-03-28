@@ -1,0 +1,3 @@
+# Set relay 1 as cam switch
+RELAY1_PIN 70
+RELAY1_FUNCTION 1
