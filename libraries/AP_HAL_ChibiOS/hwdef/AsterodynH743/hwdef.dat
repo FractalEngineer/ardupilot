@@ -96,10 +96,10 @@ PC0 BATT_CURRENT_SENS ADC1 SCALE(1)
 
 # setup for battery
 define HAL_BATT_MONITOR_DEFAULT 4
-define HAL_BATT_VOLT_PIN 10
-define HAL_BATT_CURR_PIN 11
-define HAL_BATT_VOLT_SCALE 21.12
-define HAL_BATT_CURR_SCALE 40.2
+define HAL_BATT_VOLT_PIN 11
+define HAL_BATT_CURR_PIN 10
+define HAL_BATT_VOLT_SCALE 30.7
+define HAL_BATT_CURR_SCALE 40.0
 
 # compass
 define HAL_COMPASS_DISABLE_QMC5883L_INTERNAL_PROBE
@@ -142,35 +142,33 @@ SPIDEV  icm42688_2  SPI3  DEVID2  ICM42688_2_CS  MODE3   1*MHZ  24*MHZ
 SPIDEV  osd         SPI1  DEVID4  AT7456E_CS     MODE0  10*MHZ  10*MHZ
 
 # 2 IMUs - ICM-42688P
-# ROTATION_ROLL_180_YAW_90 matches typical FC mounting; adjust per board layout
 IMU Invensensev3 SPI:icm42688_1 ROTATION_ROLL_180_YAW_90
-IMU Invensensev3 SPI:icm42688_2 ROTATION_ROLL_180
+IMU Invensensev3 SPI:icm42688_2 ROTATION_ROLL_180_YAW_270
 
 # barometer - BMP388/390 on I2C bus 0 (I2C2), default address 0x77
 # SDO pin low = 0x76, SDO pin high = 0x77
 BARO BMP388 I2C:0:0x76
 
+# Camera control
+PE5  TIM15_CH1 TIM15 PWM(9) GPIO(58) NODMA
+
 # PINIO - camera/VTX control pads
-PE5 PINIO1 OUTPUT GPIO(70) LOW
-PE6 PINIO2 OUTPUT GPIO(71) LOW
+PE6 PINIO1 OUTPUT GPIO(70) LOW
+PD4 PINIO2 OUTPUT GPIO(71) LOW
 define HAL_PINIO_PIN_COUNT 2
 define HAL_PINIO1_PIN 70
 define HAL_PINIO1_PARAMS 0
 define HAL_PINIO2_PIN 71
 define HAL_PINIO2_PARAMS 0
 
-# Camera switch
-PD4 CAM_SW OUTPUT GPIO(72) LOW
-
 # enable FAT filesystem support (needs a microSD defined via SDMMC)
 define HAL_OS_FATFS_IO 1
 
 # setup for serial ports
-define DEFAULT_SERIAL2_PROTOCOL SerialProtocol_MSP_DisplayPort
-define DEFAULT_SERIAL4_PROTOCOL SerialProtocol_MAVLink2
+define DEFAULT_SERIAL3_PROTOCOL SerialProtocol_GPS
 define DEFAULT_SERIAL6_PROTOCOL SerialProtocol_RCIN
 define DEFAULT_SERIAL7_PROTOCOL SerialProtocol_ESCTelemetry
-define DEFAULT_SERIAL8_PROTOCOL SerialProtocol_MAVLink2
+define DEFAULT_SERIAL8_PROTOCOL SerialProtocol_MSP_DisplayPort
 define DEFAULT_SERIAL8_BAUD 115
 
 # setup for OSD
