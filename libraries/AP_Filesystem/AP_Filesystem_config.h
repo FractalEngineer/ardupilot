@@ -10,6 +10,10 @@
 #define AP_FILESYSTEM_FLASH_W25NXX 2
 #define AP_FILESYSTEM_FLASH_WSPI_NAND 3
 
+// used by LittleFS - transport used to reach the chip
+#define AP_FILESYSTEM_FLASH_TRANSPORT_SPI  1
+#define AP_FILESYSTEM_FLASH_TRANSPORT_WSPI 2
+
 // backends:
 
 #ifndef AP_FILESYSTEM_ESP32_ENABLED
@@ -27,6 +31,26 @@
 #ifndef AP_FILESYSTEM_LITTLEFS_FLASH_TYPE
 #define AP_FILESYSTEM_LITTLEFS_FLASH_TYPE AP_FILESYSTEM_FLASH_JEDEC_NOR
 #endif
+
+// Transport defaults to follow the chip family for back-compat: the MT29
+// (WSPI_NAND) family historically implies a WSPI bus, everything else SPI. A
+// board wiring an MT29 on plain SPI overrides AP_FILESYSTEM_LITTLEFS_TRANSPORT.
+#ifndef AP_FILESYSTEM_LITTLEFS_TRANSPORT
+#if AP_FILESYSTEM_LITTLEFS_FLASH_TYPE == AP_FILESYSTEM_FLASH_WSPI_NAND
+#define AP_FILESYSTEM_LITTLEFS_TRANSPORT AP_FILESYSTEM_FLASH_TRANSPORT_WSPI
+#else
+#define AP_FILESYSTEM_LITTLEFS_TRANSPORT AP_FILESYSTEM_FLASH_TRANSPORT_SPI
+#endif
+#endif
+
+#define AP_FILESYSTEM_LITTLEFS_USE_WSPI \
+    (AP_FILESYSTEM_LITTLEFS_TRANSPORT == AP_FILESYSTEM_FLASH_TRANSPORT_WSPI)
+
+// NAND chip families share the two-step page/cache algorithm and (mostly) a
+// common command set; the per-family differences live inside the chip ops.
+#define AP_FILESYSTEM_LITTLEFS_FLASH_IS_NAND \
+    (AP_FILESYSTEM_LITTLEFS_FLASH_TYPE == AP_FILESYSTEM_FLASH_W25NXX || \
+     AP_FILESYSTEM_LITTLEFS_FLASH_TYPE == AP_FILESYSTEM_FLASH_WSPI_NAND)
 
 // Enable support for Micron MT29FXX SPI NAND flash family (1G/2G/4G/8G)
 // Requires AP_FILESYSTEM_LITTLEFS_FLASH_TYPE == AP_FILESYSTEM_FLASH_WSPI_NAND
