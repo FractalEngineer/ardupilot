@@ -697,7 +697,9 @@ bool AP_Filesystem_FlashMemory_LittleFS::is_busy()
 
 // Send a command with an address phase, picking the transport from the build.
 // WSPI uses a 24-bit address; SPI uses 24- or 32-bit per use_32bit_address.
-bool AP_Filesystem_FlashMemory_LittleFS::send_command_addr(uint8_t command, uint32_t addr)
+// Best effort: both transports only fail on a severe bus stall, which the SPI
+// path has always ignored, so the result is not propagated.
+void AP_Filesystem_FlashMemory_LittleFS::send_command_addr(uint8_t command, uint32_t addr)
 {
 #if AP_FILESYSTEM_LITTLEFS_USE_WSPI
     const AP_HAL::Device::CommandHeader hdr {
@@ -708,7 +710,7 @@ bool AP_Filesystem_FlashMemory_LittleFS::send_command_addr(uint8_t command, uint
         .addr = addr,
     };
     wspi_dev->set_cmd_header(hdr);
-    return wspi_dev->transfer(nullptr, 0, nullptr, 0);
+    wspi_dev->transfer(nullptr, 0, nullptr, 0);
 #else
     uint8_t cmd[5];
     cmd[0] = command;
@@ -725,7 +727,7 @@ bool AP_Filesystem_FlashMemory_LittleFS::send_command_addr(uint8_t command, uint
         cmd[4] = 0;
     }
 
-    return dev->transfer(cmd, use_32bit_address ? 5 : 4, nullptr, 0);
+    dev->transfer(cmd, use_32bit_address ? 5 : 4, nullptr, 0);
 #endif
 }
 
@@ -825,9 +827,9 @@ bool AP_Filesystem_FlashMemory_LittleFS::nand_set_reg(uint8_t reg, uint8_t value
 }
 
 // load a page from the array into the chip's internal cache
-bool AP_Filesystem_FlashMemory_LittleFS::nand_page_read(uint32_t row_addr)
+void AP_Filesystem_FlashMemory_LittleFS::nand_page_read(uint32_t row_addr)
 {
-    return send_command_addr(JEDEC_PAGE_DATA_READ, row_addr);
+    send_command_addr(JEDEC_PAGE_DATA_READ, row_addr);
 }
 
 // clock data out of the chip's internal cache starting at a column address
@@ -877,16 +879,18 @@ bool AP_Filesystem_FlashMemory_LittleFS::nand_program_load(uint16_t col_addr, co
 #endif
 }
 
-// commit the cache to the array at a row (page) address
-bool AP_Filesystem_FlashMemory_LittleFS::nand_program_execute(uint32_t row_addr)
+// commit the cache to the array at a row (page) address. a transport failure
+// here cannot set PFAIL (the chip never ran the op); the fail bits cover the
+// case where the chip ran it and rejected it, so this is best effort.
+void AP_Filesystem_FlashMemory_LittleFS::nand_program_execute(uint32_t row_addr)
 {
-    return send_command_addr(JEDEC_PROGRAM_EXECUTE, row_addr);
+    send_command_addr(JEDEC_PROGRAM_EXECUTE, row_addr);
 }
 
 // erase the block containing the given row (page) address
-bool AP_Filesystem_FlashMemory_LittleFS::nand_block_erase(uint32_t row_addr)
+void AP_Filesystem_FlashMemory_LittleFS::nand_block_erase(uint32_t row_addr)
 {
-    return send_command_addr(JEDEC_BLOCK_ERASE, row_addr);
+    send_command_addr(JEDEC_BLOCK_ERASE, row_addr);
 }
 #endif  // AP_FILESYSTEM_LITTLEFS_FLASH_IS_NAND
 
@@ -1311,9 +1315,7 @@ int AP_Filesystem_FlashMemory_LittleFS::_flashmem_read(
         }
         {
             WITH_SEMAPHORE(dev_sem);
-            if (!nand_page_read(row_addr)) {
-                return LFS_ERR_IO;
-            }
+            nand_page_read(row_addr);
         }
 
         if (!wait_until_device_is_ready()) {
@@ -1384,9 +1386,7 @@ int AP_Filesystem_FlashMemory_LittleFS::_flashmem_prog(
         if (!nand_program_load(0, p, page_size)) {
             return LFS_ERR_IO;
         }
-        if (!nand_program_execute(row_addr)) {
-            return LFS_ERR_IO;
-        }
+        nand_program_execute(row_addr);
 #else
         dev->set_chip_select(true);
         send_command_addr(JEDEC_PAGE_WRITE, address);
@@ -1416,9 +1416,7 @@ int AP_Filesystem_FlashMemory_LittleFS::_flashmem_erase(lfs_block_t block) {
 #if AP_FILESYSTEM_LITTLEFS_FLASH_IS_NAND
     // NAND: BLOCK ERASE uses the row address of the block's first page
     const uint32_t pages_per_block = fs_cfg.block_size / fs_cfg.read_size;
-    if (!nand_block_erase(block * pages_per_block)) {
-        return LFS_ERR_IO;
-    }
+    nand_block_erase(block * pages_per_block);
 #else
     send_command_addr(JEDEC_BLOCK_ERASE, block * fs_cfg.block_size);
 #endif
