@@ -678,6 +678,8 @@ AP_HW_SED_UGNSS                      7153
 AP_HW_TYKHO_TLS7V2                   7170
 AP_HW_TYKHO_TLS7-Wing                7171
 
+AP_HW_FRACTAL_GWING_AIO              7180
+
 # please fill gaps in the above ranges rather than adding past ID #7199
 
 
