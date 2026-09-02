@@ -1,0 +1,29 @@
+# hw definition file for the Fractal G-Wing AIO bootloader
+
+MCU STM32F4xx STM32F405xx
+
+APJ_BOARD_ID AP_HW_FRACTAL_GWING_AIO
+
+OSCILLATOR_HZ 8000000
+FLASH_SIZE_KB 1024
+
+# The bootloader occupies the first 64 KiB.
+FLASH_RESERVE_START_KB 0
+FLASH_BOOTLOADER_LOAD_KB 64
+
+PA14 LED_BOOTLOADER OUTPUT LOW GPIO(0)
+PA13 LED_ACTIVITY OUTPUT LOW GPIO(1)
+define HAL_LED_ON 0
+
+SERIAL_ORDER OTG1
+PA11 OTG_FS_DM OTG1
+PA12 OTG_FS_DP OTG1
+
+# Keep SPI chip selects inactive and switched peripherals at their safe
+# startup levels while the main firmware is not running.
+PA4  MPU_CS    CS
+PB12 OSD_CS    CS
+PC14 SDCARD_CS CS
+PC13 PINIO1    OUTPUT GPIO(81) LOW
+PB15 CAM_SW    OUTPUT GPIO(82) LOW
+PB2  VTX_PWR   OUTPUT GPIO(83) HIGH
