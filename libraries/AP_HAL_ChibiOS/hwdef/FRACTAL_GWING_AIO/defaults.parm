@@ -1,0 +1,6 @@
+# Use the onboard analog voltage and current sensors.
+BATT_MONITOR 4
+
+# ADC RSSI is available on PC5.
+RSSI_TYPE 1
+RSSI_ANA_PIN 15
