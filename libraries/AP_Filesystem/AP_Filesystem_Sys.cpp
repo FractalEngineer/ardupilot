@@ -55,6 +55,7 @@ static const SysFileList sysfs_file_list[] = {
     {"crash_dump.bin"},
 #endif
     {"storage.bin"},
+    {"space.txt"},
 #if AP_FILESYSTEM_SYS_FLASH_ENABLED
     {"flash.bin"},
 #endif
@@ -154,6 +155,22 @@ int AP_Filesystem_Sys::open(const char *fname, int flags, bool allow_absolute_pa
         size_t size = 0;
         if (hal.storage->get_storage_ptr(ptr, size)) {
             r.str->set_buffer((char*)ptr, size, size);
+        }
+    }
+    if (strcmp(fname, "space.txt") == 0) {
+        // space of the logging filesystem
+        const int64_t total = AP::FS().disk_space(HAL_BOARD_LOG_DIRECTORY);
+        const int64_t free = AP::FS().disk_free(HAL_BOARD_LOG_DIRECTORY);
+        if (total > 0) {
+            const char *unit = "MB";
+            unsigned div = 1024 * 1024;
+            if (total >= 10000LL * 1024 * 1024) {
+                unit = "GB";
+                div = 1024 * 1024 * 1024;
+            }
+            r.str->printf("total=%llu%s free=%llu%s\n",
+                          (unsigned long long)(total / div), unit,
+                          (unsigned long long)(free > 0 ? free / div : 0), unit);
         }
     }
 #if AP_FILESYSTEM_SYS_FLASH_ENABLED
