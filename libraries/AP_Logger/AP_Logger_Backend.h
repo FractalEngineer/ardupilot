@@ -86,6 +86,9 @@ public:
 
     virtual uint32_t bufferspace_available() = 0;
 
+    // storage capacity in bytes; returns false if unknown or unsupported
+    virtual bool get_storage_space(uint64_t &total_bytes, uint64_t &free_bytes) const { return false; }
+
     virtual void PrepForArming();
 
     virtual void start_new_log() { }

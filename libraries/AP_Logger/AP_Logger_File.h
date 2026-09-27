@@ -103,6 +103,13 @@ private:
     int64_t disk_space_avail();
     int64_t disk_space();
 
+    // storage capacity, cached as disk_space_avail() walks the filesystem
+    bool get_storage_space(uint64_t &total_bytes, uint64_t &free_bytes) const override;
+    void storage_update_thread();
+    bool _storage_thread_started;
+    volatile uint32_t _storage_total_mb;
+    volatile uint32_t _storage_free_mb;
+
     void ensure_log_directory_exists();
 
     bool file_exists(const char *filename) const;

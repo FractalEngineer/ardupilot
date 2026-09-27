@@ -211,6 +211,9 @@ public:
     void set_num_types(uint8_t num_types) { _num_types = num_types; }
 
     bool CardInserted(void);
+
+    // storage capacity in bytes; returns false if unknown or unsupported
+    bool get_storage_space(uint64_t &total_bytes, uint64_t &free_bytes) const;
     bool _log_pause;
 
     // pause logging if aux switch is active and log rate limit enabled

@@ -111,6 +111,12 @@ void AP_Logger_File::Init()
         }
     }
 
+    if (!_storage_thread_started) {
+        _storage_thread_started = true;
+        hal.scheduler->thread_create(FUNCTOR_BIND_MEMBER(&AP_Logger_File::storage_update_thread, void),
+                                     "logstorage", 2048, AP_HAL::Scheduler::PRIORITY_LOW, 0);
+    }
+
     Prep_MinSpace();
 }
 
@@ -220,6 +226,32 @@ int64_t AP_Logger_File::disk_space_avail()
 int64_t AP_Logger_File::disk_space()
 {
     return AP::FS().disk_space(_log_directory);
+}
+
+// disk_free() walks the whole filesystem, which is very expensive on flash
+// filesystems, so keep a cached copy updated from a low priority thread
+void AP_Logger_File::storage_update_thread()
+{
+    while (true) {
+        const int64_t total = disk_space();
+        const int64_t free = disk_space_avail();
+        if (total > 0) {
+            _storage_total_mb = total / (1024 * 1024);
+            _storage_free_mb = free > 0 ? free / (1024 * 1024) : 0;
+        }
+        hal.scheduler->delay(30000);
+    }
+}
+
+bool AP_Logger_File::get_storage_space(uint64_t &total_bytes, uint64_t &free_bytes) const
+{
+    const uint32_t total_mb = _storage_total_mb;
+    if (total_mb == 0) {
+        return false;
+    }
+    total_bytes = (uint64_t)total_mb * 1024 * 1024;
+    free_bytes = (uint64_t)_storage_free_mb * 1024 * 1024;
+    return true;
 }
 
 /*

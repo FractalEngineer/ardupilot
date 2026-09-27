@@ -818,6 +818,16 @@ bool AP_Logger::CardInserted(void) {
     return false;
 }
 
+// storage capacity in bytes; returns false if unknown or unsupported
+bool AP_Logger::get_storage_space(uint64_t &total_bytes, uint64_t &free_bytes) const {
+    for (uint8_t i=0; i< _next_backend; i++) {
+        if (backends[i]->get_storage_space(total_bytes, free_bytes)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void AP_Logger::StopLogging()
 {
     FOR_EACH_BACKEND(stop_logging());
