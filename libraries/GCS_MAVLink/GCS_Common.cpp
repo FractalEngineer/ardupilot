@@ -1147,6 +1147,7 @@ ap_message GCS_MAVLINK::mavlink_id_to_ap_message_id(const uint32_t mavlink_id) c
         { MAVLINK_MSG_ID_EKF_STATUS_REPORT,     MSG_EKF_STATUS_REPORT},
 #endif  // AP_AHRS_ENABLED
         { MAVLINK_MSG_ID_PID_TUNING,            MSG_PID_TUNING},
+        { MAVLINK_MSG_ID_STORAGE_INFORMATION,   MSG_STORAGE_INFORMATION},
         { MAVLINK_MSG_ID_VIBRATION,             MSG_VIBRATION},
 #if AP_RPM_ENABLED
         { MAVLINK_MSG_ID_RPM,                   MSG_RPM},
@@ -2143,6 +2144,30 @@ void GCS_MAVLINK::log_mavlink_stats()
     AP::logger().WriteBlock(&pkt, sizeof(pkt));
 }
 #endif
+
+/*
+  send the STORAGE_INFORMATION message
+ */
+void GCS_MAVLINK::send_storage_information() const
+{
+    mavlink_storage_information_t packet {};
+    packet.time_boot_ms = AP_HAL::millis();
+    packet.storage_id = 1;
+    packet.storage_count = 1;
+    packet.status = STORAGE_STATUS_NOT_SUPPORTED;
+#if HAL_LOGGING_ENABLED
+    uint64_t total_bytes, free_bytes;
+    if (AP::logger().get_storage_space(total_bytes, free_bytes)) {
+        packet.status = STORAGE_STATUS_READY;
+        const float total_mb = total_bytes / (1024.0f * 1024.0f);
+        const float free_mb = free_bytes / (1024.0f * 1024.0f);
+        packet.total_capacity = total_mb;
+        packet.used_capacity = total_mb - free_mb;
+        packet.available_capacity = free_mb;
+    }
+#endif
+    mavlink_msg_storage_information_send_struct(chan, &packet);
+}
 
 /*
   send the SYSTEM_TIME message
@@ -5971,6 +5996,13 @@ MAV_RESULT GCS_MAVLINK::handle_command_int_packet(const mavlink_command_int_t &p
     case MAV_CMD_REQUEST_MESSAGE:
         return handle_command_request_message(packet);
 
+    case MAV_CMD_REQUEST_STORAGE_INFORMATION: {
+        // same as requesting the STORAGE_INFORMATION message
+        mavlink_command_int_t request = packet;
+        request.param1 = MAVLINK_MSG_ID_STORAGE_INFORMATION;
+        return handle_command_request_message(request);
+    }
+
 #if AP_MAVLINK_FOLLOW_HANDLING_ENABLED
     case MAV_CMD_DO_FOLLOW:
         return handle_command_do_follow(packet, msg);
@@ -6828,6 +6860,11 @@ bool GCS_MAVLINK::try_send_message(const enum ap_message id)
             return camera->send_mavlink_message(*this, id);
         }
 #endif  // AP_CAMERA_ENABLED
+
+    case MSG_STORAGE_INFORMATION:
+        CHECK_PAYLOAD_SIZE(STORAGE_INFORMATION);
+        send_storage_information();
+        break;
 
     case MSG_SYSTEM_TIME:
         CHECK_PAYLOAD_SIZE(SYSTEM_TIME);
