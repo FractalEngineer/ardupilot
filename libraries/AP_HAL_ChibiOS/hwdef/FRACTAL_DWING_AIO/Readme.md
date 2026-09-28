@@ -10,7 +10,7 @@ pin assignments are derived from the [pinned Betaflight target configuration](ht
 | SERIAL2 | USART2 (PA2/PA3) | SmartAudio |
 | SERIAL3 | USART3 (PD8/PD9) | GPS |
 | SERIAL5 | USART6 (PC6/PC7) | CRSF receiver |
-| SERIAL6 | UART8 (PE0/PE1) | MSP DisplayPort OSD |
+| SERIAL8 | UART8 (PE0/PE1) | MSP DisplayPort OSD |
 
 The I2C1 bus (PB8/PB9) is external for a compass. The I2C2 bus (PB10/PB11)
 contains the onboard BMP388 barometer. PWM outputs 1--11 map to the two motor

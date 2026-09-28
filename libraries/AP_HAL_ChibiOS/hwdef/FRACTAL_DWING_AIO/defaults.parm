@@ -1,6 +1,22 @@
 # Use the onboard analog voltage and current sensors.
 BATT_MONITOR 4
 
+# Flying wing: outputs 1 and 2 are the motors, 3 and 4 the elevons. Plane's
+# generic defaults put aileron/elevator/throttle on outputs 1-3, so set these.
+SERVO1_FUNCTION 73   # ThrottleLeft
+SERVO2_FUNCTION 74   # ThrottleRight
+SERVO3_FUNCTION 78   # ElevonRight
+SERVO4_FUNCTION 77   # ElevonLeft
+
+# The two motor outputs are bidirectional DShot capable.
+SERVO_BLH_MASK 3
+SERVO_BLH_OTYPE 5
+SERVO_BLH_BDMASK 3
+
 # ADC RSSI is available on PA7.
 RSSI_TYPE 1
 RSSI_ANA_PIN 7
+
+# The OpenOSD-X OSD uses a Betaflight-compatible font and has no decimal-pack symbols.
+MSP_OPTIONS 4
+OSD_OPTIONS 0
